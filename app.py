@@ -30,6 +30,25 @@ from sqlalchemy.exc import SQLAlchemyError
 
 app = Flask(__name__)
 
+# =====================================
+# INICIALIZACIÓN AUTOMÁTICA PARA GUNICORN
+# =====================================
+
+def safe_init():
+    """Inicialización segura que no bloquea el arranque"""
+    try:
+        print("🚀 [GUNICORN] Inicializando base de datos...")
+        init_database()
+        print("✅ [GUNICORN] Base de datos inicializada")
+    except Exception as e:
+        print(f"⚠️ [GUNICORN] Error en DB (continuando): {e}")
+    
+    try:
+        verificar_archivos_datos()
+        print("✅ [GUNICORN] Archivos verificados")
+    except Exception as e:
+        print(f"⚠️ [GUNICORN] Error en archivos (continuando): {e}")
+
 # Configuración de base de datos
 DATABASE_URL = os.environ.get('DATABASE_URL', 'sqlite:///local_data.db')
 print(f"🔄 DATABASE_URL obtenida: {DATABASE_URL[:80]}...")
@@ -1203,15 +1222,26 @@ def debug_stock():
 # INICIALIZACIÓN DE LA APLICACIÓN
 # =====================================
 
+# Ejecutar inicialización automática para Gunicorn
+safe_init()
+
 if __name__ == '__main__':
     try:
         print("🚀 Sistema Alvear - Iniciando servidor...")
         
-        # Inicializar base de datos PostgreSQL
-        init_database()
+        # Inicializar base de datos PostgreSQL (no crítico)
+        try:
+            init_database()
+            print("✅ Base de datos inicializada")
+        except Exception as e:
+            print(f"⚠️ Error en DB (continuando): {e}")
         
-        verificar_archivos_datos()
-        print("✅ Archivos de datos verificados")
+        # Verificar archivos (no crítico)
+        try:
+            verificar_archivos_datos()
+            print("✅ Archivos de datos verificados")
+        except Exception as e:
+            print(f"⚠️ Error en archivos (continuando): {e}")
         
         # Configuración para desarrollo vs producción
         debug_mode = os.environ.get('FLASK_ENV') != 'production'
@@ -1220,11 +1250,15 @@ if __name__ == '__main__':
         if debug_mode:
             print("🔧 Modo desarrollo - http://localhost:5000")
         else:
-            print(f"🌐 Modo producción con PostgreSQL - Puerto {port}")
+            print(f"🌐 Modo producción - Puerto {port}")
             
+        print("🎯 INICIANDO SERVIDOR...")
         app.run(debug=debug_mode, host='0.0.0.0', port=port)
             
     except Exception as e:
-        print(f"❌ Error al iniciar servidor: {e}")
+        print(f"❌ Error CRÍTICO al iniciar servidor: {e}")
         import traceback
         traceback.print_exc()
+        # Intentar iniciar en modo básico
+        print("🆘 Intentando modo de emergencia...")
+        app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
