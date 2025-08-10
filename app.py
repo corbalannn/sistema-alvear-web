@@ -1223,8 +1223,14 @@ def debug_stock():
 # =====================================
 
 # Ejecutar inicialización automática para Gunicorn
-# TEMPORALMENTE COMENTADO PARA DEBUG
-# safe_init()
+try:
+    print("🚀 [GUNICORN] Iniciando inicialización segura...")
+    safe_init()
+    print("✅ [GUNICORN] Inicialización completada")
+except Exception as e:
+    print(f"⚠️ [GUNICORN] Error en inicialización (app continúa): {e}")
+    import traceback
+    traceback.print_exc()
 
 if __name__ == '__main__':
     try:
