@@ -1223,7 +1223,8 @@ def debug_stock():
 # =====================================
 
 # Ejecutar inicialización automática para Gunicorn
-safe_init()
+# TEMPORALMENTE COMENTADO PARA DEBUG
+# safe_init()
 
 if __name__ == '__main__':
     try:
