@@ -906,13 +906,17 @@ def api_deposito_actualizar_producto(codigo):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
-@app.route('/api/deposito/producto/<codigo>', methods=['DELETE'])
+@app.route('/api/deposito/producto/<path:codigo>', methods=['DELETE'])
 def api_deposito_eliminar_producto(codigo):
     """API para eliminar un producto específico"""
     try:
+        print(f"🗑️ DELETE request para código: {codigo}")
         stock = cargar_stock()
+        print(f"📦 Stock tiene {len(stock)} productos")
+        print(f"🔑 Códigos disponibles: {list(stock.keys())[:3]}...")  # Mostrar primeros 3
         
         if codigo not in stock:
+            print(f"❌ Producto NO encontrado: {codigo}")
             return jsonify({'error': 'Producto no encontrado'}), 404
         
         producto_eliminado = stock[codigo].copy()
@@ -926,11 +930,12 @@ def api_deposito_eliminar_producto(codigo):
         del stock[codigo]
         guardar_stock(stock)
         
-        print(f"🗑️ Producto eliminado: {codigo} - {descripcion}")
+        print(f"✅ Producto eliminado: {codigo} - {descripcion}")
         
         return jsonify({'success': True, 'message': 'Producto eliminado correctamente'})
     
     except Exception as e:
+        print(f"❌ Error en eliminación: {e}")
         return jsonify({'success': False, 'error': str(e)}), 400
 
 @app.route('/api/deposito/agregar-hilo', methods=['POST'])

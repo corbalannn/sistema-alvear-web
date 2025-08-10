@@ -1,0 +1,20 @@
+[
+  {
+    "fecha": "2025-08-10 14:08:12",
+    "tipo": "EGRESO",
+    "codigo": "Algodón_24/1_Peinado_crudo_y144p_deposito_de_descarga",
+    "descripcion": "Eliminación de producto: Algodón 24/1 crudo",
+    "cantidad": -180,
+    "ubicacion": "deposito de descarga",
+    "usuario": "Sistema"
+  },
+  {
+    "fecha": "2025-08-10 14:08:08",
+    "tipo": "EGRESO",
+    "codigo": "Algodón_20/1_Peinado_crudo_6828_deposito_de_descarga",
+    "descripcion": "Eliminación de producto: Algodón 20/1 crudo",
+    "cantidad": -30,
+    "ubicacion": "deposito de descarga",
+    "usuario": "Sistema"
+  }
+]
