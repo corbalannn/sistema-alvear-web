@@ -1172,6 +1172,19 @@ def internal_server_error(e):
 # RUTA DE DEBUG
 # =====================================
 
+@app.route('/debug/env')
+def debug_env():
+    """Devuelve información de la variable de entorno"""
+    try:
+        return jsonify({
+            'DATABASE_URL_exists': bool(DATABASE_URL),
+            'DATABASE_URL_length': len(DATABASE_URL) if DATABASE_URL else 0,
+            'DATABASE_URL_starts_with': DATABASE_URL[:30] if DATABASE_URL else 'None',
+            'engine_exists': engine is not None
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
 @app.route('/debug/stock')
 def debug_stock():
     """Devuelve todos los productos actuales en la base de datos PostgreSQL (solo lectura)"""
