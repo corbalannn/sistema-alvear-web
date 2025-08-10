@@ -1,0 +1,30 @@
+{
+  "Algodón": {
+    "cajas": 10,
+    "Palletizado": 3
+  },
+  "Snow": {
+    "cajas": 8,
+    "Palletizado": 2
+  },
+  "Spun": {
+    "cajas": 8,
+    "Palletizado": 2
+  },
+  "Poal": {
+    "cajas": 12,
+    "Palletizado": 4
+  },
+  "Melange": {
+    "cajas": 6,
+    "Palletizado": 2
+  },
+  "Poliester": {
+    "cajas": 5,
+    "Palletizado": 1
+  },
+  "Elastano": {
+    "cajas": 3,
+    "Palletizado": 1
+  }
+}

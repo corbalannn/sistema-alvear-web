@@ -1,0 +1,406 @@
+{% extends "base_moderno.html" %}
+
+{% block title %}Dashboard - Depósito Moderno{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-speedometer2"></i> 
+            Dashboard Ejecutivo
+        </h1>
+    </div>
+</div>
+
+<!-- Estadísticas principales -->
+<div class="row mb-4">
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center">
+            <div class="stat-number" id="totalProductos">0</div>
+            <div class="stat-label">Total Productos</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center" style="background: linear-gradient(135deg, var(--success), #2F855A);">
+            <div class="stat-number" id="totalKilos">0</div>
+            <div class="stat-label">Total Kilos</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center" style="background: linear-gradient(135deg, var(--warning), #B7791F);">
+            <div class="stat-number" id="productosActivos">0</div>
+            <div class="stat-label">Productos Activos</div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6 mb-3">
+        <div class="stat-card text-center" style="background: linear-gradient(135deg, var(--accent), var(--secondary));">
+            <div class="stat-number" id="ubicaciones">0</div>
+            <div class="stat-label">Ubicaciones</div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos principales -->
+<div class="row mb-4">
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <h5 class="mb-3">
+                <i class="bi bi-pie-chart"></i> 
+                Distribución por Tipo
+            </h5>
+            <div style="position: relative; height: 250px;">
+                <canvas id="tipoChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <h5 class="mb-3">
+                <i class="bi bi-geo-alt"></i> 
+                Distribución por Ubicación
+            </h5>
+            <div style="position: relative; height: 250px;">
+                <canvas id="ubicacionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 mb-4">
+        <div class="chart-container">
+            <h5 class="mb-3">
+                <i class="bi bi-speedometer"></i> 
+                Estado del Stock
+            </h5>
+            <div style="position: relative; height: 250px;">
+                <canvas id="estadoChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Estado del stock -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> 
+                    Estado del Stock
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="text-center p-3 border rounded-3" style="border-color: var(--error) !important; background: rgba(229, 62, 62, 0.1);">
+                            <div class="h4 mb-1" style="color: var(--error);" id="stockCritico">0</div>
+                            <small class="text-muted">Stock Crítico</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="text-center p-3 border rounded-3" style="border-color: var(--warning) !important; background: rgba(214, 158, 46, 0.1);">
+                            <div class="h4 mb-1" style="color: var(--warning);" id="stockBajo">0</div>
+                            <small class="text-muted">Stock Bajo</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="text-center p-3 border rounded-3" style="border-color: var(--success) !important; background: rgba(56, 161, 105, 0.1);">
+                            <div class="h4 mb-1" style="color: var(--success);" id="stockNormal">0</div>
+                            <small class="text-muted">Stock Normal</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="text-center p-3 border rounded-3" style="border-color: var(--accent) !important; background: rgba(49, 130, 206, 0.1);">
+                            <div class="h4 mb-1" style="color: var(--accent);" id="stockExceso">0</div>
+                            <small class="text-muted">Stock en Exceso</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Últimos movimientos -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> 
+                    Últimos Movimientos
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Material</th>
+                                <th>Cantidad</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ultimosMovimientos">
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">
+                                    <i class="bi bi-hourglass-split"></i> 
+                                    Cargando...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let tipoChart, ubicacionChart, estadoChart;
+
+// Inicializar dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    // Esperar un poco para que Chart.js se cargue completamente
+    setTimeout(() => {
+        cargarEstadisticas();
+        cargarGraficos();
+        cargarUltimosMovimientos();
+    }, 100);
+});
+
+async function cargarEstadisticas() {
+    try {
+        const response = await fetch('/api/estadisticas');
+        const data = await response.json();
+        
+        // Actualizar estadísticas principales
+        document.getElementById('totalProductos').textContent = data.total_productos || 0;
+        document.getElementById('totalKilos').textContent = (data.total_kilos || 0).toLocaleString() + ' kg';
+        document.getElementById('productosActivos').textContent = data.productos_activos || 0;
+        document.getElementById('ubicaciones').textContent = data.ubicaciones || 0;
+        
+        // Actualizar estado del stock
+        document.getElementById('stockCritico').textContent = data.stock_critico || 0;
+        document.getElementById('stockBajo').textContent = data.stock_bajo || 0;
+        document.getElementById('stockNormal').textContent = data.stock_normal || 0;
+        document.getElementById('stockExceso').textContent = data.stock_exceso || 0;
+        
+    } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+    }
+}
+
+async function cargarGraficos() {
+    try {
+        console.log('🎯 Iniciando carga de gráficos...');
+        const response = await fetch('/api/graficos');
+        const data = await response.json();
+        console.log('📊 Datos recibidos:', data);
+        
+        // Verificar que Chart.js está disponible
+        if (typeof Chart === 'undefined') {
+            console.error('❌ Chart.js no está cargado');
+            return;
+        }
+        
+        // Crear gráfico por tipo
+        const tipoCtx = document.getElementById('tipoChart').getContext('2d');
+        console.log('🎨 Creando gráfico de tipos...');
+        tipoChart = new Chart(tipoCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.por_tipo.labels || [],
+                datasets: [{
+                    data: data.por_tipo.data || [],
+                    backgroundColor: [
+                        '#1B365D', '#2C5282', '#3182CE', '#38A169',
+                        '#D69E2E', '#E53E3E', '#805AD5', '#319795'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Crear gráfico por ubicación (torta)
+        const ubicacionCtx = document.getElementById('ubicacionChart').getContext('2d');
+        console.log('📍 Creando gráfico de ubicaciones...');
+        ubicacionChart = new Chart(ubicacionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.por_ubicacion.labels || [],
+                datasets: [{
+                    data: data.por_ubicacion.data || [],
+                    backgroundColor: [
+                        '#3182CE', '#38A169', '#D69E2E', '#E53E3E', 
+                        '#805AD5', '#319795', '#2C5282', '#C53030'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            usePointStyle: true,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return `${context.label}: ${context.raw} cajas (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Crear gráfico de estado del stock
+        const estadoCtx = document.getElementById('estadoChart').getContext('2d');
+        console.log('⚡ Creando gráfico de estado...');
+        
+        // Obtener datos de estado desde las estadísticas
+        const estadisticas = await fetch('/api/estadisticas').then(r => r.json());
+        
+        estadoChart = new Chart(estadoCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Stock Normal', 'Stock Bajo', 'Stock Crítico', 'Stock Exceso'],
+                datasets: [{
+                    data: [
+                        estadisticas.stock_normal || 0,
+                        estadisticas.stock_bajo || 0, 
+                        estadisticas.stock_critico || 0,
+                        estadisticas.stock_exceso || 0
+                    ],
+                    backgroundColor: [
+                        '#38A169', // Verde - Normal
+                        '#D69E2E', // Amarillo - Bajo  
+                        '#E53E3E', // Rojo - Crítico
+                        '#3182CE'  // Azul - Exceso
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 10,
+                            usePointStyle: true,
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((context.raw / total) * 100).toFixed(1) : '0';
+                                return `${context.label}: ${context.raw} productos (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Gráficos creados exitosamente');
+        
+    } catch (error) {
+        console.error('❌ Error al cargar gráficos:', error);
+    }
+}
+
+async function cargarUltimosMovimientos() {
+    try {
+        const response = await fetch('/api/movimientos?limit=5');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('ultimosMovimientos');
+        
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        <i class="bi bi-inbox"></i> 
+                        No hay movimientos registrados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = data.map(mov => `
+            <tr>
+                <td>${moment(mov.fecha).format('DD/MM/YYYY')}</td>
+                <td>
+                    <span class="badge bg-${mov.tipo === 'ingreso' ? 'success' : 'warning'}">
+                        ${mov.tipo}
+                    </span>
+                </td>
+                <td>
+                    <strong>${mov.tipo_hilado}</strong><br>
+                    <small class="text-muted">${mov.titulo}</small>
+                </td>
+                <td>
+                    ${mov.cantidad} ${mov.formato}<br>
+                    <small class="text-muted">${mov.kg_total} kg</small>
+                </td>
+                <td>
+                    <span class="badge bg-primary">${mov.ubicacion}</span>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error al cargar movimientos:', error);
+        document.getElementById('ultimosMovimientos').innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-danger">
+                    <i class="bi bi-exclamation-circle"></i> 
+                    Error al cargar datos
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Actualizar datos cada 30 segundos
+setInterval(() => {
+    cargarEstadisticas();
+    cargarUltimosMovimientos();
+}, 30000);
+</script>
+{% endblock %}

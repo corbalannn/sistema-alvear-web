@@ -1,0 +1,53 @@
+[
+  {
+    "tipo_hilado": "Algodón",
+    "titulo": "Ne 20/1",
+    "caracteristica": "Cardado",
+    "porcentaje": "100%",
+    "color": "crudo",
+    "formato": "cajas",
+    "ubicacion": "Depósito A",
+    "kg_por_caja": 25.0,
+    "cantidad": 8.0,
+    "fecha": "2024-12-16",
+    "parametros": {
+      "cantidad_cajas": 8,
+      "cantidad_pallets": 0,
+      "kg_total": 200.0
+    }
+  },
+  {
+    "tipo_hilado": "Snow",
+    "titulo": "Ne 24/1",
+    "caracteristica": "Peinado",
+    "porcentaje": "100%",
+    "color": "blanco",
+    "formato": "Palletizado",
+    "ubicacion": "Depósito B",
+    "kg_por_caja": 500.0,
+    "cantidad": 1.0,
+    "fecha": "2024-12-16",
+    "parametros": {
+      "cantidad_cajas": 0,
+      "cantidad_pallets": 1,
+      "kg_total": 500.0
+    }
+  },
+  {
+    "tipo_hilado": "Poal",
+    "titulo": "Ne 26/1",
+    "caracteristica": "Ring",
+    "porcentaje": "100%",
+    "color": "negro",
+    "formato": "cajas",
+    "ubicacion": "Depósito A",
+    "kg_por_caja": 25.0,
+    "cantidad": 15.0,
+    "fecha": "2024-12-16",
+    "parametros": {
+      "cantidad_cajas": 15,
+      "cantidad_pallets": 0,
+      "kg_total": 375.0
+    }
+  }
+]

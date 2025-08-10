@@ -1,0 +1,538 @@
+{% extends "base_moderno.html" %}
+
+{% block title %}Configuración de Umbrales - Depósito Moderno{% endblock %}
+
+{% block extra_css %}
+<style>
+.config-card {
+    border-radius: 15px;
+    box-shadow: var(--shadow-sm);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.config-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.config-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 1.5rem;
+}
+
+.umbral-item {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.umbral-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.umbral-tipo {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.input-group-text {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    font-weight: 500;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(27, 54, 93, 0.25);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #38a169, #48bb78);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-save:hover {
+    background: linear-gradient(135deg, #2f855a, #38a169);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-reset {
+    background: linear-gradient(135deg, #e53e3e, #fc8181);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-reset:hover {
+    background: linear-gradient(135deg, #c53030, #e53e3e);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, rgba(49, 130, 206, 0.1), rgba(66, 153, 225, 0.1));
+    border: 1px solid var(--primary-color);
+    border-radius: 12px;
+}
+
+.config-stats {
+    background: linear-gradient(135deg, rgba(27, 54, 93, 0.05), rgba(44, 82, 130, 0.05));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 0.5rem;
+}
+
+.loading-spinner {
+    display: none;
+}
+
+.saved-indicator {
+    display: none;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-gear"></i> 
+            Configuración de Umbrales
+        </h1>
+        <p class="text-muted">
+            Configura los niveles mínimos de stock para cada tipo de hilado. 
+            El sistema te alertará cuando el stock esté por debajo de estos valores.
+        </p>
+    </div>
+</div>
+
+<!-- Estadísticas actuales -->
+<div class="config-stats">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number" id="total-tipos">0</div>
+                <div class="stat-label">Tipos de Hilado</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-danger" id="alertas-criticas">0</div>
+                <div class="stat-label">Alertas Críticas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-warning" id="alertas-bajas">0</div>
+                <div class="stat-label">Stock Bajo</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-item">
+                <div class="stat-number text-success" id="stock-normal">0</div>
+                <div class="stat-label">Stock Normal</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulario de configuración -->
+<div class="row">
+    <div class="col-12">
+        <div class="config-card card">
+            <div class="config-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-sliders"></i>
+                    Configurar Umbrales por Tipo de Hilado
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Instrucciones:</strong> Define los niveles mínimos para cada formato.
+                    Cuando el stock esté en estos niveles o por debajo, recibirás alertas automáticas.
+                </div>
+
+                <form id="umbralesForm">
+                    <div id="umbrales-container">
+                        <!-- Los umbrales se cargarán dinámicamente -->
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            <button type="button" class="btn btn-outline-primary" onclick="agregarNuevoTipo()">
+                                <i class="bi bi-plus-circle"></i> Agregar Nuevo Tipo
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-reset" onclick="resetearUmbrales()">
+                                <i class="bi bi-arrow-clockwise"></i> Restablecer
+                            </button>
+                            <button type="submit" class="btn btn-save">
+                                <i class="bi bi-check-circle"></i> Guardar Cambios
+                                <span class="loading-spinner spinner-border spinner-border-sm ms-2" role="status"></span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicador de guardado -->
+<div class="saved-indicator alert alert-success" role="alert">
+    <i class="bi bi-check-circle"></i> Configuración guardada exitosamente
+</div>
+
+<!-- Modal para agregar nuevo tipo -->
+<div class="modal fade" id="nuevoTipoModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Agregar Nuevo Tipo de Hilado
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="nuevoTipoForm">
+                    <div class="mb-3">
+                        <label for="nuevo-tipo-nombre" class="form-label">Nombre del Tipo</label>
+                        <input type="text" class="form-control" id="nuevo-tipo-nombre" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <label for="nuevo-tipo-cajas" class="form-label">Umbral Cajas</label>
+                            <input type="number" class="form-control" id="nuevo-tipo-cajas" min="0" value="10">
+                        </div>
+                        <div class="col-6">
+                            <label for="nuevo-tipo-pallets" class="form-label">Umbral Pallets</label>
+                            <input type="number" class="form-control" id="nuevo-tipo-pallets" min="0" value="2">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="guardarNuevoTipo()">
+                    <i class="bi bi-plus"></i> Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let umbralesActuales = {};
+let tiposEnStock = [];
+
+// Inicializar página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarUmbralesActuales();
+    cargarTiposEnStock();
+    cargarEstadisticas();
+    
+    // Event listener para el formulario
+    document.getElementById('umbralesForm').addEventListener('submit', guardarUmbrales);
+});
+
+async function cargarUmbralesActuales() {
+    try {
+        const response = await fetch('/api/umbrales');
+        umbralesActuales = await response.json();
+        console.log('Umbrales cargados:', umbralesActuales);
+    } catch (error) {
+        console.error('Error al cargar umbrales:', error);
+    }
+}
+
+async function cargarTiposEnStock() {
+    try {
+        const response = await fetch('/api/stock_consolidado');
+        const stock = await response.json();
+        
+        // Obtener tipos únicos del stock actual
+        tiposEnStock = [...new Set(stock.map(item => item.tipo_hilado))];
+        console.log('Tipos en stock:', tiposEnStock);
+        
+        // Combinar con umbrales existentes
+        const todosTipos = new Set([...tiposEnStock, ...Object.keys(umbralesActuales)]);
+        
+        renderizarUmbrales([...todosTipos]);
+    } catch (error) {
+        console.error('Error al cargar tipos en stock:', error);
+        // Si falla, usar solo los umbrales existentes
+        renderizarUmbrales(Object.keys(umbralesActuales));
+    }
+}
+
+function renderizarUmbrales(tipos) {
+    const container = document.getElementById('umbrales-container');
+    
+    if (tipos.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-inbox display-4 text-muted"></i>
+                <h5 class="text-muted mt-3">No hay tipos de hilado configurados</h5>
+                <p class="text-muted">Agrega stock primero o crea un nuevo tipo manualmente.</p>
+                <button type="button" class="btn btn-primary" onclick="agregarNuevoTipo()">
+                    <i class="bi bi-plus-circle"></i> Agregar Nuevo Tipo
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = tipos.map(tipo => crearUmbralItem(tipo)).join('');
+}
+
+function crearUmbralItem(tipo) {
+    const umbral = umbralesActuales[tipo] || { cajas: 10, Palletizado: 2 };
+    const enStock = tiposEnStock.includes(tipo);
+    
+    return `
+        <div class="umbral-item" data-tipo="${tipo}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="umbral-tipo">
+                    <i class="bi bi-box"></i> ${tipo}
+                    ${enStock ? '<span class="badge bg-success ms-2">En Stock</span>' : '<span class="badge bg-secondary ms-2">Nuevo</span>'}
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="eliminarTipo('${tipo}')">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Umbral para Cajas</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-box"></i>
+                        </span>
+                        <input type="number" 
+                               class="form-control" 
+                               name="${tipo}_cajas" 
+                               value="${umbral.cajas || 10}" 
+                               min="0" 
+                               step="1"
+                               placeholder="Cantidad mínima">
+                        <span class="input-group-text">cajas</span>
+                    </div>
+                    <small class="text-muted">Alerta cuando queden menos cajas que este valor</small>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Umbral para Pallets</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-stack"></i>
+                        </span>
+                        <input type="number" 
+                               class="form-control" 
+                               name="${tipo}_pallets" 
+                               value="${umbral.Palletizado || 2}" 
+                               min="0" 
+                               step="1"
+                               placeholder="Cantidad mínima">
+                        <span class="input-group-text">pallets</span>
+                    </div>
+                    <small class="text-muted">Alerta cuando queden menos pallets que este valor</small>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function guardarUmbrales(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const nuevosUmbrales = {};
+    
+    // Procesar datos del formulario
+    const items = document.querySelectorAll('.umbral-item');
+    items.forEach(item => {
+        const tipo = item.dataset.tipo;
+        const cajas = parseInt(formData.get(`${tipo}_cajas`)) || 10;
+        const pallets = parseInt(formData.get(`${tipo}_pallets`)) || 2;
+        
+        nuevosUmbrales[tipo] = {
+            cajas: cajas,
+            Palletizado: pallets
+        };
+    });
+    
+    try {
+        // Mostrar spinner
+        document.querySelector('.loading-spinner').style.display = 'inline-block';
+        
+        const response = await fetch('/api/umbrales', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(nuevosUmbrales)
+        });
+        
+        if (response.ok) {
+            umbralesActuales = nuevosUmbrales;
+            mostrarIndicadorGuardado();
+            cargarEstadisticas(); // Actualizar estadísticas
+        } else {
+            const error = await response.json();
+            alert('Error al guardar: ' + (error.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión al guardar umbrales');
+    } finally {
+        // Ocultar spinner
+        document.querySelector('.loading-spinner').style.display = 'none';
+    }
+}
+
+function agregarNuevoTipo() {
+    const modal = new bootstrap.Modal(document.getElementById('nuevoTipoModal'));
+    modal.show();
+}
+
+function guardarNuevoTipo() {
+    const nombre = document.getElementById('nuevo-tipo-nombre').value.trim();
+    const cajas = parseInt(document.getElementById('nuevo-tipo-cajas').value) || 10;
+    const pallets = parseInt(document.getElementById('nuevo-tipo-pallets').value) || 2;
+    
+    if (!nombre) {
+        alert('Por favor ingresa un nombre para el tipo de hilado');
+        return;
+    }
+    
+    if (umbralesActuales[nombre]) {
+        alert('Este tipo de hilado ya existe');
+        return;
+    }
+    
+    // Agregar nuevo tipo
+    umbralesActuales[nombre] = { cajas, Palletizado: pallets };
+    
+    // Re-renderizar
+    const todosTipos = new Set([...tiposEnStock, ...Object.keys(umbralesActuales)]);
+    renderizarUmbrales([...todosTipos]);
+    
+    // Cerrar modal y limpiar
+    const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoTipoModal'));
+    modal.hide();
+    document.getElementById('nuevoTipoForm').reset();
+}
+
+function eliminarTipo(tipo) {
+    if (confirm(`¿Estás seguro de eliminar el tipo "${tipo}"?`)) {
+        delete umbralesActuales[tipo];
+        const todosTipos = new Set([...tiposEnStock, ...Object.keys(umbralesActuales)]);
+        renderizarUmbrales([...todosTipos]);
+    }
+}
+
+function resetearUmbrales() {
+    if (confirm('¿Estás seguro de restablecer todos los umbrales a los valores por defecto?')) {
+        cargarUmbralesOriginales();
+    }
+}
+
+async function cargarUmbralesOriginales() {
+    try {
+        const response = await fetch('/api/umbrales/reset', { method: 'POST' });
+        if (response.ok) {
+            umbralesActuales = await response.json();
+            const todosTipos = new Set([...tiposEnStock, ...Object.keys(umbralesActuales)]);
+            renderizarUmbrales([...todosTipos]);
+            mostrarIndicadorGuardado();
+        }
+    } catch (error) {
+        console.error('Error al resetear umbrales:', error);
+    }
+}
+
+function mostrarIndicadorGuardado() {
+    const indicator = document.querySelector('.saved-indicator');
+    indicator.style.display = 'block';
+    setTimeout(() => {
+        indicator.style.display = 'none';
+    }, 3000);
+}
+
+async function cargarEstadisticas() {
+    try {
+        const response = await fetch('/api/stock_consolidado');
+        const stock = await response.json();
+        
+        let criticas = 0, bajas = 0, normales = 0;
+        
+        stock.forEach(item => {
+            const tipo = item.tipo_hilado;
+            const umbral = umbralesActuales[tipo];
+            if (!umbral) return;
+            
+            const limite = item.formato === 'cajas' ? umbral.cajas : umbral.Palletizado;
+            
+            if (item.cantidad_unidades === 0) {
+                criticas++;
+            } else if (item.cantidad_unidades <= limite) {
+                bajas++;
+            } else {
+                normales++;
+            }
+        });
+        
+        document.getElementById('total-tipos').textContent = Object.keys(umbralesActuales).length;
+        document.getElementById('alertas-criticas').textContent = criticas;
+        document.getElementById('alertas-bajas').textContent = bajas;
+        document.getElementById('stock-normal').textContent = normales;
+        
+    } catch (error) {
+        console.error('Error al cargar estadísticas:', error);
+    }
+}
+</script>
+{% endblock %}

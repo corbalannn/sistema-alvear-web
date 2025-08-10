@@ -1,0 +1,329 @@
+{% extends "base_moderno.html" %}
+
+{% block title %}Reportes - Depósito{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-graph-up"></i> 
+            Reportes del Depósito
+        </h1>
+    </div>
+</div>
+
+<!-- Filtros y controles -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-funnel"></i> 
+                    Filtros de Reporte
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Tipo de Reporte</label>
+                        <select class="form-select" id="tipoReporte">
+                            <option value="stock-general" selected>Stock General</option>
+                            <option value="stock-critico">Stock Crítico</option>
+                            <option value="por-proveedor">Por Proveedor</option>
+                            <option value="por-ubicacion">Por Ubicación</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Tipo de Hilado</label>
+                        <select class="form-select" id="filtroTipo">
+                            <option value="">Todos</option>
+                            <option value="Algodón">Algodón</option>
+                            <option value="Poliéster">Poliéster</option>
+                            <option value="Snow">Snow</option>
+                            <option value="Spun">Spun</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Estado</label>
+                        <select class="form-select" id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="Crítico">Crítico</option>
+                            <option value="Bajo">Bajo</option>
+                            <option value="Normal">Normal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">&nbsp;</label>
+                        <button class="btn btn-primary d-block w-100" onclick="generarReporte()">
+                            <i class="bi bi-play-fill"></i> Generar Reporte
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-download"></i> 
+                    Exportar
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-success" onclick="exportarExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+                    </button>
+                    <button class="btn btn-danger" onclick="exportarPDF()">
+                        <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
+                    </button>
+                    <button class="btn btn-info" onclick="imprimirReporte()">
+                        <i class="bi bi-printer"></i> Imprimir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resumen del reporte -->
+<div class="row mb-4" id="resumenReporte" style="display: none;">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-data"></i> 
+                    Resumen del Reporte
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-primary mb-1" id="resumenProductos">0</h4>
+                            <small class="text-muted">Total Productos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-success mb-1" id="resumenCajas">0</h4>
+                            <small class="text-muted">Total Cajas</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-danger mb-1" id="resumenCriticos">0</h4>
+                            <small class="text-muted">Productos Críticos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <h4 class="text-info mb-1" id="fechaReporte">-</h4>
+                            <small class="text-muted">Fecha Generación</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de resultados -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-table"></i> 
+                    Resultados del Reporte
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tablaReporte">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Código</th>
+                                <th>Tipo</th>
+                                <th>Título</th>
+                                <th>Color</th>
+                                <th>Cantidad</th>
+                                <th>Ubicación</th>
+                                <th>Proveedor</th>
+                                <th>Lote</th>
+                                <th>Fecha Ingreso</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyReporte">
+                            <tr>
+                                <td colspan="10" class="text-center text-muted">
+                                    <i class="bi bi-search"></i> 
+                                    Selecciona un tipo de reporte y haz clic en "Generar Reporte"
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let datosReporte = [];
+
+// Generar reporte
+async function generarReporte() {
+    try {
+        const tipoReporte = document.getElementById('tipoReporte').value;
+        const filtroTipo = document.getElementById('filtroTipo').value;
+        const filtroEstado = document.getElementById('filtroEstado').value;
+        
+        // Mostrar loading
+        document.getElementById('bodyReporte').innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center">
+                    <i class="bi bi-hourglass-split"></i> 
+                    Generando reporte...
+                </td>
+            </tr>
+        `;
+        
+        // Llamar a la API
+        const response = await fetch(`/api/reporte/${tipoReporte}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        datosReporte = data.productos || [];
+        
+        // Aplicar filtros
+        let productosFiltrados = datosReporte;
+        
+        if (filtroTipo) {
+            productosFiltrados = productosFiltrados.filter(p => p.tipo === filtroTipo);
+        }
+        
+        if (filtroEstado) {
+            productosFiltrados = productosFiltrados.filter(p => p.estado === filtroEstado);
+        }
+        
+        // Actualizar resumen
+        document.getElementById('resumenProductos').textContent = data.total_productos || 0;
+        document.getElementById('resumenCajas').textContent = data.total_cajas || 0;
+        document.getElementById('resumenCriticos').textContent = data.productos_criticos || 0;
+        document.getElementById('fechaReporte').textContent = moment(data.fecha_reporte).format('DD/MM/YYYY');
+        document.getElementById('resumenReporte').style.display = 'block';
+        
+        // Generar tabla
+        const tbody = document.getElementById('bodyReporte');
+        
+        if (productosFiltrados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="10" class="text-center text-muted">
+                        <i class="bi bi-inbox"></i> 
+                        No se encontraron productos con los filtros aplicados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        tbody.innerHTML = productosFiltrados.map(producto => `
+            <tr>
+                <td><small>${producto.codigo}</small></td>
+                <td><strong>${producto.tipo}</strong></td>
+                <td>${producto.titulo}</td>
+                <td>${producto.color}</td>
+                <td>
+                    <span class="badge bg-${producto.estado_color}">
+                        ${producto.cantidad} ${producto.formato}
+                    </span>
+                </td>
+                <td><small>${producto.ubicacion}</small></td>
+                <td><small>${producto.proveedor}</small></td>
+                <td><code>${producto.lote}</code></td>
+                <td><small>${moment(producto.fecha_ingreso).format('DD/MM/YYYY')}</small></td>
+                <td>
+                    <span class="badge bg-${producto.estado_color}">
+                        ${producto.estado}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error al generar reporte:', error);
+        document.getElementById('bodyReporte').innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-danger">
+                    <i class="bi bi-exclamation-circle"></i> 
+                    Error al generar reporte: ${error.message}
+                </td>
+            </tr>
+        `;
+    }
+}
+
+// Exportar a Excel (simulado)
+function exportarExcel() {
+    if (datosReporte.length === 0) {
+        alert('Primero debes generar un reporte');
+        return;
+    }
+    
+    // Por ahora mostrar mensaje
+    alert('Funcionalidad de exportar Excel en desarrollo');
+}
+
+// Exportar a PDF (simulado)
+function exportarPDF() {
+    if (datosReporte.length === 0) {
+        alert('Primero debes generar un reporte');
+        return;
+    }
+    
+    // Por ahora mostrar mensaje
+    alert('Funcionalidad de exportar PDF en desarrollo');
+}
+
+// Imprimir reporte
+function imprimirReporte() {
+    if (datosReporte.length === 0) {
+        alert('Primero debes generar un reporte');
+        return;
+    }
+    
+    window.print();
+}
+
+// Cargar reporte por defecto al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    generarReporte();
+});
+</script>
+
+<style>
+@media print {
+    .card-header, .btn, .nav-link, nav {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 12px;
+    }
+}
+</style>
+{% endblock %}

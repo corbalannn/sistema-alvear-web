@@ -1,0 +1,615 @@
+{% extends "base_moderno.html" %}
+
+{% block title %}Stock - Depósito{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Estilos tipo cartas de juego */
+.card-type-section {
+    margin-bottom: 2rem;
+}
+
+/* Colores personalizados para Stock (verde/azul) */
+.type-header {
+    background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.titulo-section {
+    background: rgba(255,255,255,0.95);
+    border: 2px solid #e5e7eb;
+    border-radius: 0 0 10px 10px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    border-top: 2px solid #10b981;
+}
+
+.titulo-header {
+    background: linear-gradient(90deg, #f0fdf4 0%, #ecfdf5 100%);
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #d1fae5;
+    font-weight: 600;
+    color: #065f46;
+}
+
+/* Colores por tipo de hilado - Tema Stock */
+.tipo-algodon .type-header {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.tipo-melange .type-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.tipo-poliester .type-header {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.tipo-lana .type-header {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.tipo-elastano .type-header {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Cartas de productos */
+.product-card {
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+.product-card .card-header {
+    background: linear-gradient(45deg, #f0fdf4, #ecfdf5);
+    border-bottom: 2px solid #d1fae5;
+    font-weight: 600;
+    color: #065f46;
+}
+
+.cantidad-badge {
+    font-size: 1.1em;
+    padding: 0.5rem 1rem;
+}
+
+/* Menú de tres puntos */
+.card-menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+
+.menu-trigger {
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.menu-trigger:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.dropdown-menu {
+    font-size: 0.9em;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(2px);
+}
+
+/* Logos de proveedores */
+.proveedor-logo {
+    width: 40px;
+    height: 32px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 6px;
+    background: white;
+    padding: 1px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s ease;
+}
+
+.proveedor-logo:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Ajuste del header para evitar superposición */
+.card-header-content {
+    padding-right: 45px; /* Espacio para el menú */
+}
+
+.card-header-with-menu {
+    position: relative;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-boxes"></i> 
+            Stock del Depósito
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ul"></i>
+                    Inventario Actual
+                </h5>
+            </div>
+            
+            <div class="card-body">
+                <!-- Área de loading -->
+                <div id="loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando stock...</p>
+                </div>
+                
+                <!-- Área de contenido -->
+                <div id="content" style="display: none;">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <input type="text" id="search" class="form-control" placeholder="Buscar productos...">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filtro-tipo" class="form-select">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <span id="count" class="badge bg-info fs-6">0 productos</span>
+                        </div>
+                    </div>
+                    
+                    <div id="products-by-type">
+                        <!-- Los productos organizados por tipo se cargarán aquí -->
+                    </div>
+                </div>
+                
+                <!-- Área de error -->
+                <div id="error" style="display: none;" class="alert alert-danger">
+                    <!-- Los errores se mostrarán aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('Stock page loaded');
+
+let productos = [];
+
+async function cargarStock() {
+    try {
+        console.log('Cargando stock...');
+        
+        // Mostrar loading
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('error').style.display = 'none';
+        
+        // Llamar a la API
+        console.log('Fetching /api/deposito/productos');
+        const response = await fetch('/api/deposito/productos');
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Data received:', data);
+        
+        // Convertir a array
+        productos = Object.entries(data).map(([codigo, item]) => ({
+            ...item,
+            codigo: codigo
+        }));
+        
+        console.log('Productos procesados:', productos.length);
+        
+        // Mostrar contenido
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        
+        renderizarProductos();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('error').innerHTML = `
+            <h5>Error al cargar stock</h5>
+            <p>${error.message}</p>
+            <button class="btn btn-primary" onclick="cargarStock()">Reintentar</button>
+        `;
+    }
+}
+
+function renderizarProductos() {
+    const container = document.getElementById('products-by-type');
+    const count = document.getElementById('count');
+    const filtroTipo = document.getElementById('filtro-tipo');
+    
+    console.log('Renderizando productos organizados por tipo:', productos.length);
+    
+    if (productos.length === 0) {
+        container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No hay productos en stock</p></div>';
+        count.textContent = '0 productos';
+        return;
+    }
+    
+    // Agrupar por tipo
+    const productosPorTipo = {};
+    productos.forEach(producto => {
+        const tipo = producto.tipo || 'Sin tipo';
+        if (!productosPorTipo[tipo]) {
+            productosPorTipo[tipo] = {};
+        }
+        
+        const titulo = producto.titulo || 'Sin título';
+        if (!productosPorTipo[tipo][titulo]) {
+            productosPorTipo[tipo][titulo] = [];
+        }
+        
+        productosPorTipo[tipo][titulo].push(producto);
+    });
+    
+    // Actualizar filtro de tipos
+    const tiposExistentes = Object.keys(productosPorTipo);
+    filtroTipo.innerHTML = '<option value="">Todos los tipos</option>' + 
+        tiposExistentes.map(tipo => `<option value="${tipo}">${tipo}</option>`).join('');
+    
+    count.textContent = `${productos.length} productos en ${tiposExistentes.length} tipos`;
+    
+    // Renderizar cada tipo
+    container.innerHTML = tiposExistentes.map(tipo => {
+        const titulosDelTipo = productosPorTipo[tipo];
+        const tipoClass = `tipo-${tipo.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+        
+        return `
+            <div class="card-type-section ${tipoClass}">
+                <div class="type-header">
+                    <h3 class="mb-0">
+                        <i class="bi bi-layer-group"></i>
+                        ${tipo}
+                        <span class="badge bg-light text-dark ms-2">${Object.keys(titulosDelTipo).length} títulos</span>
+                    </h3>
+                </div>
+                
+                ${Object.entries(titulosDelTipo).map(([titulo, productosDelTitulo]) => `
+                    <div class="titulo-section">
+                        <div class="titulo-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-ruler"></i> ${titulo}
+                                <span class="badge bg-primary ms-2">${productosDelTitulo.length} productos</span>
+                                <span class="badge bg-success ms-1">
+                                    ${productosDelTitulo.reduce((sum, p) => sum + (parseInt(p.cantidad) || 0), 0)} unidades
+                                </span>
+                            </h5>
+                        </div>
+                        
+                        <div class="row p-3">
+                            ${productosDelTitulo.map(producto => `
+                                <div class="col-md-6 col-lg-4 col-xl-3">
+                                    <div class="card product-card">
+                                        <!-- Menú de tres puntos -->
+                                        <div class="card-menu">
+                                            <div class="dropdown">
+                                                <button class="menu-trigger" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="bi bi-three-dots-vertical"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="#" onclick="editarProducto('${producto.codigo}')">
+                                                            <i class="bi bi-pencil me-2"></i>Modificar
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item text-danger" href="#" onclick="eliminarProducto('${producto.codigo}')">
+                                                            <i class="bi bi-trash me-2"></i>Eliminar
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="card-header card-header-with-menu">
+                                            <div class="card-header-content">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <h6 class="card-title mb-0">
+                                                        <i class="bi bi-palette"></i> ${producto.color || 'Sin color'}
+                                                    </h6>
+                                                    ${producto.proveedor ? `
+                                                        <img src="/static/images/proveedores/${getProveedorLogo(producto.proveedor)}" 
+                                                             alt="${getProveedorNombreCompleto(producto.proveedor)}" 
+                                                             class="proveedor-logo"
+                                                             title="${getProveedorNombreCompleto(producto.proveedor)}"
+                                                             onerror="this.style.display='none'">
+                                                    ` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <small class="text-muted">Lote:</small><br>
+                                                    <strong>${producto.lote || 'S/L'}</strong>
+                                                </div>
+                                                <div class="col-6">
+                                                    <small class="text-muted">Ubicación:</small><br>
+                                                    <strong>${producto.ubicacion || 'S/U'}</strong>
+                                                </div>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="text-center">
+                                                <span class="badge cantidad-badge ${obtenerColorCantidad(producto.cantidad)}">
+                                                    ${producto.cantidad || 0} ${producto.formato || 'unidades'}
+                                                </span>
+                                            </div>
+                                            ${producto.proveedor ? `
+                                                <div class="mt-2 text-center">
+                                                    <small class="text-muted">${getProveedorNombreCompleto(producto.proveedor)}</small>
+                                                </div>
+                                            ` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }).join('');
+}
+
+function obtenerColorCantidad(cantidad) {
+    const cant = parseInt(cantidad) || 0;
+    if (cant === 0) return 'bg-danger';
+    if (cant < 10) return 'bg-warning';
+    if (cant < 50) return 'bg-info';
+    return 'bg-success';
+}
+
+function getProveedorLogo(proveedor) {
+    const proveedorMaps = {
+        'T&N Platex': 'tn_platex.png',
+        'Tecotex': 'tecotex.png',
+        'Emilio Alal': 'emilio_alal.png',
+        'Hilanderias Pomar': 'hilanderias_pomar.png',
+        'Hilados Lear': 'hilados_lear.png'
+    };
+    
+    return proveedorMaps[proveedor] || 'default_proveedor.png';
+}
+
+function getProveedorNombreCompleto(proveedor) {
+    const proveedorNombres = {
+        'T&N Platex': 'T&N Platex S.A.',
+        'Tecotex': 'Tecotex S.A.',
+        'Emilio Alal': 'Emilio Alal S.A.',
+        'Hilanderias Pomar': 'Hilanderías Pomar S.A.',
+        'Hilados Lear': 'Hilados Lear S.A.'
+    };
+    
+    return proveedorNombres[proveedor] || proveedor;
+}
+
+function buscarProductos() {
+    const searchTerm = document.getElementById('search').value.toLowerCase();
+    const tipoFiltro = document.getElementById('filtro-tipo').value;
+    
+    let filtrados = productos;
+    
+    // Filtrar por tipo si está seleccionado
+    if (tipoFiltro) {
+        filtrados = filtrados.filter(producto => producto.tipo === tipoFiltro);
+    }
+    
+    // Filtrar por término de búsqueda
+    if (searchTerm) {
+        filtrados = filtrados.filter(producto => 
+            producto.tipo?.toLowerCase().includes(searchTerm) ||
+            producto.titulo?.toLowerCase().includes(searchTerm) ||
+            producto.color?.toLowerCase().includes(searchTerm) ||
+            producto.lote?.toLowerCase().includes(searchTerm) ||
+            producto.ubicacion?.toLowerCase().includes(searchTerm) ||
+            producto.codigo?.toLowerCase().includes(searchTerm) ||
+            producto.proveedor?.toLowerCase().includes(searchTerm)
+        );
+    }
+    
+    // Actualizar productos temporalmente para renderizado
+    const productosOriginales = productos;
+    productos = filtrados;
+    renderizarProductos();
+    productos = productosOriginales;
+}
+
+// Funciones para el menú de acciones
+function editarProducto(codigo) {
+    const producto = productos.find(p => p.codigo === codigo);
+    if (!producto) {
+        alert('Producto no encontrado');
+        return;
+    }
+    
+    // Modal simple para editar (puedes mejorarlo con Bootstrap modal)
+    const nuevaCantidad = prompt(`Editar cantidad para:\n${producto.tipo} - ${producto.titulo} - ${producto.color}\n\nCantidad actual: ${producto.cantidad}`, producto.cantidad);
+    
+    if (nuevaCantidad !== null && nuevaCantidad !== '') {
+        const cantidad = parseInt(nuevaCantidad);
+        if (isNaN(cantidad) || cantidad < 0) {
+            alert('Por favor ingrese una cantidad válida');
+            return;
+        }
+        
+        // Actualizar en el array local
+        producto.cantidad = cantidad;
+        
+        // Aquí enviarías al servidor
+        actualizarProducto(codigo, { cantidad: cantidad });
+        
+        // Re-renderizar
+        renderizarProductos();
+    }
+}
+
+function eliminarProducto(codigo) {
+    console.log('Intentando eliminar producto:', codigo);
+    
+    const producto = productos.find(p => p.codigo === codigo);
+    if (!producto) {
+        console.error('Producto no encontrado en array local:', codigo);
+        alert('Producto no encontrado');
+        return;
+    }
+    
+    console.log('Producto encontrado:', producto);
+    
+    if (confirm(`¿Está seguro de eliminar este producto?\n\n${producto.tipo} - ${producto.titulo} - ${producto.color}\nLote: ${producto.lote}\nCantidad: ${producto.cantidad}`)) {
+        console.log('Usuario confirmó eliminación');
+        
+        // Eliminar del array local primero para feedback inmediato
+        productos = productos.filter(p => p.codigo !== codigo);
+        console.log('Producto eliminado del array local, productos restantes:', productos.length);
+        
+        // Re-renderizar inmediatamente
+        renderizarProductos();
+        
+        // Enviar al servidor
+        eliminarProductoDelServidor(codigo);
+        
+        // Mostrar confirmación
+        mostrarNotificacion('Producto eliminado correctamente', 'success');
+    } else {
+        console.log('Usuario canceló eliminación');
+    }
+}
+
+// Función para actualizar producto en el servidor
+async function actualizarProducto(codigo, datos) {
+    try {
+        const response = await fetch(`/api/deposito/producto/${codigo}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(datos)
+        });
+        
+        if (response.ok) {
+            mostrarNotificacion('Producto actualizado correctamente', 'success');
+        } else {
+            throw new Error('Error al actualizar');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarNotificacion('Error al actualizar el producto', 'error');
+    }
+}
+
+// Función para eliminar producto del servidor
+async function eliminarProductoDelServidor(codigo) {
+    try {
+        console.log('Enviando DELETE al servidor para:', codigo);
+        
+        const response = await fetch(`/api/deposito/producto/${codigo}`, {
+            method: 'DELETE'
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Eliminación exitosa:', result);
+        } else {
+            const error = await response.json();
+            console.error('Error del servidor:', error);
+            throw new Error(error.message || 'Error al eliminar');
+        }
+    } catch (error) {
+        console.error('Error en eliminación:', error);
+        mostrarNotificacion('Error al eliminar del servidor: ' + error.message, 'error');
+        
+        // Recargar la página para restaurar el estado correcto
+        setTimeout(() => {
+            cargarStock();
+        }, 2000);
+    }
+}
+
+// Función para mostrar notificaciones
+function mostrarNotificacion(mensaje, tipo) {
+    // Crear notificación simple
+    const notif = document.createElement('div');
+    notif.className = `alert alert-${tipo === 'success' ? 'success' : 'danger'} position-fixed`;
+    notif.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    notif.innerHTML = `
+        ${mensaje}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    document.body.appendChild(notif);
+    
+    // Auto-remover después de 3 segundos
+    setTimeout(() => {
+        if (notif.parentElement) {
+            notif.remove();
+        }
+    }, 3000);
+}
+
+// Inicializar cuando la página se carga
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, iniciando carga...');
+    cargarStock();
+    
+    // Agregar event listeners
+    document.getElementById('search').addEventListener('input', buscarProductos);
+    document.getElementById('filtro-tipo').addEventListener('change', buscarProductos);
+});
+</script>
+{% endblock %}

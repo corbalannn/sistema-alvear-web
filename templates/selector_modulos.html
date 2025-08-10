@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Alvear - Selector de Módulos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        .selector-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            padding: 3rem;
+            max-width: 1200px;
+            width: 100%;
+        }
+        .header-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #1B365D, #2C5282);
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(27, 54, 93, 0.3);
+        }
+        .system-title {
+            color: #1B365D;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .system-subtitle {
+            color: #64748b;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        @media (min-width: 768px) {
+            .modules-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1200px) {
+            .modules-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .module-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+            text-decoration: none;
+            color: inherit;
+        }
+        .module-card:hover::before {
+            opacity: 1;
+        }
+        .module-card.active::before {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            opacity: 1;
+        }
+        .module-card.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .module-card.disabled:hover {
+            transform: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .module-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+        }
+        .module-icon.tejeduria {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.3);
+        }
+        .module-icon.mecanica {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+            box-shadow: 0 4px 15px rgba(237, 137, 54, 0.3);
+        }
+        .module-icon.gerencia {
+            background: linear-gradient(135deg, #9f7aea, #805ad5);
+            box-shadow: 0 4px 15px rgba(159, 122, 234, 0.3);
+        }
+        .module-icon.disabled {
+            background: linear-gradient(135deg, #a0aec0, #cbd5e1);
+            box-shadow: 0 4px 15px rgba(160, 174, 192, 0.2);
+        }
+        .module-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.8rem;
+        }
+        .module-description {
+            font-size: 0.95rem;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .module-status {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            margin-top: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .module-status.coming-soon {
+            background: #a0aec0;
+        }
+        .footer-info {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .version-info {
+            color: #64748b;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        @media (max-width: 767px) {
+            .selector-card {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            .system-title {
+                font-size: 2rem;
+            }
+            .modules-grid {
+                gap: 1.5rem;
+            }
+            .module-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="selector-card">
+            <div class="header-section">
+                <div class="logo-icon">
+                    <i class="bi bi-building"></i>
+                </div>
+                <h1 class="system-title">Sistema Alvear</h1>
+                <p class="system-subtitle">Gestión Integral Empresarial</p>
+            </div>
+            <div class="modules-grid">
+                <a href="/deposito" class="module-card active">
+                    <div class="module-icon">
+                        <i class="bi bi-boxes"></i>
+                    </div>
+                    <h3 class="module-title">Depósito</h3>
+                    <p class="module-description">
+                        Gestión completa de stock, ingresos, egresos y control de inventario en tiempo real
+                    </p>
+                    <span class="module-status">Operativo</span>
+                </a>
+                <div class="module-card disabled">
+                    <div class="module-icon tejeduria disabled">
+                        <i class="bi bi-gear-wide-connected"></i>
+                    </div>
+                    <h3 class="module-title">Tejeduría</h3>
+                    <p class="module-description">
+                        Control de producción, calidad de tejidos y gestión de telares
+                    </p>
+                    <span class="module-status coming-soon">Próximamente</span>
+                </div>
+                <div class="module-card disabled">
+                    <div class="module-icon mecanica disabled">
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <h3 class="module-title">Mecánica</h3>
+                    <p class="module-description">
+                        Mantenimiento preventivo y gestión integral de maquinaria
+                    </p>
+                    <span class="module-status coming-soon">Próximamente</span>
+                </div>
+                <div class="module-card disabled">
+                    <div class="module-icon gerencia disabled">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h3 class="module-title">Gerencia</h3>
+                    <p class="module-description">
+                        Reportes ejecutivos, análisis de negocio y toma de decisiones
+                    </p>
+                    <span class="module-status coming-soon">Próximamente</span>
+                </div>
+            </div>
+            <div class="footer-info">
+                <div class="version-info">
+                    <i class="bi bi-info-circle"></i>
+                    <span>Sistema Alvear Web v1.0 | Agosto 2025</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

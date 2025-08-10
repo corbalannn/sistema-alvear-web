@@ -1,0 +1,749 @@
+{% extends "base_moderno.html" %}
+
+{% block title %}Ingreso de Material - Depósito Moderno{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-4">
+            <i class="bi bi-box-arrow-in-down"></i> 
+            Ingreso de Hilado
+        </h1>
+    </div>
+</div>
+
+<!-- Formulario principal -->
+<div class="row">
+    <div class="col-lg-8 col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle"></i>
+                    Información del Hilado
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="ingresoForm">
+                    <!-- Fila 1: Tipo y Título -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="tipo_hilado" class="form-label">Tipo de Hilado</label>
+                            <select class="form-select" id="tipo_hilado" name="tipo_hilado" required>
+                                <option value="">Seleccionar tipo...</option>
+                                {% for tipo in catalogo.keys() %}
+                                <option value="{{ tipo }}">{{ tipo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="titulo" class="form-label">Título</label>
+                            <select class="form-select" id="titulo" name="titulo" required disabled>
+                                <option value="">Seleccionar título...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 2: Característica y Color -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="caracteristica" class="form-label">Característica</label>
+                            <select class="form-select" id="caracteristica" name="caracteristica" required disabled>
+                                <option value="">Seleccionar característica...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="color" class="form-label">Color</label>
+                            <select class="form-select" id="color" name="color" required>
+                                <option value="">Seleccionar color...</option>
+                                {% for color in colores %}
+                                <option value="{{ color }}">{{ color }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 3: Formato y Ubicación -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="formato" class="form-label">Formato</label>
+                            <select class="form-select" id="formato" name="formato" required>
+                                <option value="">Seleccionar formato...</option>
+                                {% for formato in formatos %}
+                                <option value="{{ formato }}">{{ formato }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ubicacion" class="form-label">Ubicación</label>
+                            <select class="form-select" id="ubicacion" name="ubicacion" required>
+                                <option value="">Seleccionar ubicación...</option>
+                                {% for ubicacion in ubicaciones %}
+                                <option value="{{ ubicacion }}">{{ ubicacion }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fila 4: Proveedor y Lote -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="proveedor" class="form-label">Proveedor</label>
+                            <select class="form-select" id="proveedor" name="proveedor" required>
+                                <option value="">Seleccionar proveedor...</option>
+                                {% for nombre, info in proveedores.items() %}
+                                <option value="{{ nombre }}" data-logo="{{ info.logo_url }}" data-descripcion="{{ info.descripcion }}">
+                                    {{ info.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lote" class="form-label">Lote</label>
+                            <select class="form-select" id="lote" name="lote" required>
+                                <option value="">Seleccionar lote...</option>
+                                <option value="nuevo">+ Agregar nuevo lote</option>
+                            </select>
+                            
+                            <!-- Campo de texto para nuevo lote (oculto inicialmente) -->
+                            <div id="nuevo-lote-container" class="mt-2" style="display: none;">
+                                <input type="text" class="form-control" id="nuevo-lote" placeholder="Ingrese el nuevo lote" maxlength="50">
+                                <div class="form-text">Escriba el identificador del nuevo lote</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista previa del proveedor seleccionado -->
+                    <div id="proveedor-preview" class="row mb-3" style="display: none;">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-body d-flex align-items-center">
+                                    <img id="proveedor-logo" src="" alt="Logo del proveedor" class="me-3" style="max-height: 40px; max-width: 120px; border-radius: 4px;" 
+                                         onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-block';">
+                                    <span class="badge bg-primary me-3" id="proveedor-fallback" style="display: none; padding: 8px 12px;">LOGO</span>
+                                    <div>
+                                        <h6 class="mb-1" id="proveedor-nombre"></h6>
+                                        <small class="text-muted" id="proveedor-descripcion"></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parámetros dinámicos según formato -->
+                    <div id="parametros-container" style="display: none;">
+                        <hr>
+                        <h6 class="mb-3"><i class="bi bi-gear"></i> Parámetros del Material</h6>
+                        
+                        <!-- Parámetros para cajas -->
+                        <div id="parametros-cajas" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="cantidad_cajas" class="form-label">Cantidad de Cajas</label>
+                                    <input type="number" class="form-control" id="cantidad_cajas" name="cantidad_cajas" min="1" step="1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kg_por_caja" class="form-label">Kg por Caja</label>
+                                    <input type="number" class="form-control" id="kg_por_caja" name="kg_por_caja" min="0.1" step="0.1" value="{{ parametros_carga.cajas.kilos_por_caja }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="conos_por_caja" class="form-label">Conos por Caja</label>
+                                    <input type="number" class="form-control" id="conos_por_caja" name="conos_por_caja" min="1" step="1" value="{{ parametros_carga.cajas.conos_por_caja }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="descripcion_cono" class="form-label">Descripción del Cono</label>
+                                    <input type="text" class="form-control" id="descripcion_cono" name="descripcion_cono" value="{{ parametros_carga.cajas.descripcion_cono }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Parámetros para palletizado -->
+                        <div id="parametros-pallets" style="display: none;">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="cantidad_pallets" class="form-label">Cantidad de Pallets</label>
+                                    <input type="number" class="form-control" id="cantidad_pallets" name="cantidad_pallets" min="1" step="1">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kg_por_pallet" class="form-label">Kg por Pallet</label>
+                                    <input type="number" class="form-control" id="kg_por_pallet" name="kg_por_pallet" min="0.1" step="0.1" value="{{ parametros_carga.Palletizado.kilos_por_pallet }}">
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="cajas_por_pallet" class="form-label">Cajas por Pallet</label>
+                                    <input type="number" class="form-control" id="cajas_por_pallet" name="cajas_por_pallet" min="1" step="1" value="{{ parametros_carga.Palletizado.cajas_por_pallet }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="descripcion_pallet" class="form-label">Descripción del Pallet</label>
+                                    <input type="text" class="form-control" id="descripcion_pallet" name="descripcion_pallet" value="{{ parametros_carga.Palletizado.descripcion }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total calculado -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <strong>Total: <span id="total-kg">0</span> kg</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Ingresar Hilado
+                        </button>
+                        <button type="reset" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-clockwise"></i> Limpiar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panel lateral con información -->
+    <div class="col-lg-4 col-md-12">
+        <!-- Últimos ingresos -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-clock-history"></i>
+                    Últimos Ingresos
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="ultimos-ingresos">
+                    <div class="text-center text-muted">
+                        <i class="bi bi-hourglass-split"></i>
+                        Cargando...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-bar-chart"></i>
+                    Estadísticas del Día
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="p-2 border rounded-3 mb-2">
+                            <div class="h5 mb-1" id="ingresos-hoy">0</div>
+                            <small class="text-muted">Ingresos Hoy</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="p-2 border rounded-3 mb-2">
+                            <div class="h5 mb-1" id="kg-hoy">0</div>
+                            <small class="text-muted">Kg Hoy</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para preguntar si quiere seguir cargando -->
+<div class="modal fade" id="continuarCargandoModal" tabindex="-1" aria-labelledby="continuarCargandoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="continuarCargandoModalLabel">
+                    <i class="bi bi-check-circle-fill text-success"></i> 
+                    Hilado Ingresado Exitosamente
+                </h5>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-success mb-3">
+                    <strong>¡Perfecto!</strong> El hilado se ha ingresado correctamente al inventario.
+                </div>
+                <p class="mb-0">¿Desea continuar cargando más hilados?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="continuarCargando()">
+                    <i class="bi bi-plus-circle"></i> Sí, seguir cargando
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="terminarCarga()">
+                    <i class="bi bi-x-circle"></i> No, terminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let catalogoCompleto = {};
+
+// Inicializar página
+document.addEventListener('DOMContentLoaded', function() {
+    cargarCatalogoCompleto();
+    cargarUltimosIngresos();
+    cargarEstadisticasDelDia();
+    
+    // Event listeners
+    document.getElementById('tipo_hilado').addEventListener('change', actualizarTitulos);
+    document.getElementById('titulo').addEventListener('change', actualizarCaracteristicas);
+    document.getElementById('formato').addEventListener('change', actualizarParametrosFormato);
+    document.getElementById('proveedor').addEventListener('change', actualizarProveedorPreview);
+    document.getElementById('ingresoForm').addEventListener('submit', procesarIngreso);
+    document.getElementById('ingresoForm').addEventListener('reset', limpiarFormulario);
+    
+    // Listeners para buscar lotes existentes
+    document.getElementById('titulo').addEventListener('change', actualizarLotesExistentes);
+    document.getElementById('caracteristica').addEventListener('change', actualizarLotesExistentes);
+    document.getElementById('color').addEventListener('change', actualizarLotesExistentes);
+    
+    // Listener para manejar selección de lote
+    document.getElementById('lote').addEventListener('change', manejarSeleccionLote);
+    
+    // Listeners para cálculo automático
+    ['cantidad_cajas', 'kg_por_caja', 'cantidad_pallets', 'kg_por_pallet'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', calcularTotal);
+        }
+    });
+});
+
+async function cargarCatalogoCompleto() {
+    try {
+        const response = await fetch('/api/catalogo');
+        catalogoCompleto = await response.json();
+    } catch (error) {
+        console.error('Error al cargar catálogo:', error);
+    }
+}
+
+function actualizarTitulos() {
+    const tipoSelect = document.getElementById('tipo_hilado');
+    const tituloSelect = document.getElementById('titulo');
+    const caracSelect = document.getElementById('caracteristica');
+    
+    // Limpiar selects dependientes
+    tituloSelect.innerHTML = '<option value="">Seleccionar título...</option>';
+    caracSelect.innerHTML = '<option value="">Seleccionar característica...</option>';
+    tituloSelect.disabled = true;
+    caracSelect.disabled = true;
+    
+    if (tipoSelect.value && catalogoCompleto[tipoSelect.value]) {
+        const titulos = Object.keys(catalogoCompleto[tipoSelect.value]);
+        
+        titulos.forEach(titulo => {
+            const option = document.createElement('option');
+            option.value = titulo;
+            option.textContent = titulo;
+            tituloSelect.appendChild(option);
+        });
+        
+        tituloSelect.disabled = false;
+    }
+}
+
+function actualizarCaracteristicas() {
+    const tipoSelect = document.getElementById('tipo_hilado');
+    const tituloSelect = document.getElementById('titulo');
+    const caracSelect = document.getElementById('caracteristica');
+    
+    caracSelect.innerHTML = '<option value="">Seleccionar característica...</option>';
+    caracSelect.disabled = true;
+    
+    if (tipoSelect.value && tituloSelect.value && catalogoCompleto[tipoSelect.value][tituloSelect.value]) {
+        const tituloData = catalogoCompleto[tipoSelect.value][tituloSelect.value];
+        
+        if (tituloData.caracteristica) {
+            tituloData.caracteristica.forEach(carac => {
+                const option = document.createElement('option');
+                option.value = carac;
+                option.textContent = carac;
+                caracSelect.appendChild(option);
+            });
+            caracSelect.disabled = false;
+        } else if (tituloData.Porcentaje) {
+            // Para Melange, usar Porcentaje en lugar de característica
+            tituloData.Porcentaje.forEach(porc => {
+                const option = document.createElement('option');
+                option.value = porc;
+                option.textContent = porc;
+                caracSelect.appendChild(option);
+            });
+            caracSelect.disabled = false;
+        }
+    }
+}
+
+function actualizarParametrosFormato() {
+    const formato = document.getElementById('formato').value;
+    const container = document.getElementById('parametros-container');
+    const cajasDiv = document.getElementById('parametros-cajas');
+    const palletsDiv = document.getElementById('parametros-pallets');
+    
+    // Ocultar todos
+    cajasDiv.style.display = 'none';
+    palletsDiv.style.display = 'none';
+    
+    if (formato === 'cajas') {
+        container.style.display = 'block';
+        cajasDiv.style.display = 'block';
+        // Limpiar campos de pallets
+        document.getElementById('cantidad_pallets').value = '';
+        document.getElementById('kg_por_pallet').value = '500';
+    } else if (formato === 'Palletizado') {
+        container.style.display = 'block';
+        palletsDiv.style.display = 'block';
+        // Limpiar campos de cajas
+        document.getElementById('cantidad_cajas').value = '';
+        document.getElementById('kg_por_caja').value = '25';
+    } else {
+        container.style.display = 'none';
+    }
+    
+    calcularTotal();
+}
+
+function calcularTotal() {
+    const formato = document.getElementById('formato').value;
+    let total = 0;
+    
+    if (formato === 'cajas') {
+        const cajas = parseFloat(document.getElementById('cantidad_cajas').value) || 0;
+        const kgPorCaja = parseFloat(document.getElementById('kg_por_caja').value) || 0;
+        total = cajas * kgPorCaja;
+    } else if (formato === 'Palletizado') {
+        const pallets = parseFloat(document.getElementById('cantidad_pallets').value) || 0;
+        const kgPorPallet = parseFloat(document.getElementById('kg_por_pallet').value) || 0;
+        total = pallets * kgPorPallet;
+    }
+    
+    document.getElementById('total-kg').textContent = total.toFixed(1);
+}
+
+function actualizarProveedorPreview() {
+    const proveedorSelect = document.getElementById('proveedor');
+    const preview = document.getElementById('proveedor-preview');
+    const selectedOption = proveedorSelect.options[proveedorSelect.selectedIndex];
+    
+    if (selectedOption.value) {
+        const logoUrl = selectedOption.getAttribute('data-logo');
+        const descripcion = selectedOption.getAttribute('data-descripcion');
+        const nombre = selectedOption.textContent;
+        
+        const logoImg = document.getElementById('proveedor-logo');
+        const fallback = document.getElementById('proveedor-fallback');
+        
+        // Resetear fallback
+        logoImg.style.display = 'block';
+        fallback.style.display = 'none';
+        
+        logoImg.src = logoUrl;
+        document.getElementById('proveedor-nombre').textContent = nombre;
+        document.getElementById('proveedor-descripcion').textContent = descripcion;
+        
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+async function actualizarLotesExistentes() {
+    const tipo_hilado = document.getElementById('tipo_hilado').value;
+    const titulo = document.getElementById('titulo').value;
+    const caracteristica = document.getElementById('caracteristica').value;
+    const color = document.getElementById('color').value;
+    
+    // Solo buscar si todos los campos están completos
+    if (!tipo_hilado || !titulo || !caracteristica || !color) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/lotes-existentes?tipo_hilado=${encodeURIComponent(tipo_hilado)}&titulo=${encodeURIComponent(titulo)}&caracteristica=${encodeURIComponent(caracteristica)}&color=${encodeURIComponent(color)}`);
+        const data = await response.json();
+        
+        mostrarLotesExistentes(data.lotes);
+    } catch (error) {
+        console.error('Error al buscar lotes existentes:', error);
+    }
+}
+
+function mostrarLotesExistentes(lotes) {
+    const loteSelect = document.getElementById('lote');
+    const infoContainer = document.getElementById('info-lotes-existentes');
+    
+    // Limpiar opciones anteriores (mantener las opciones base)
+    loteSelect.innerHTML = `
+        <option value="">Seleccionar lote...</option>
+    `;
+    
+    if (lotes && lotes.length > 0) {
+        // Agregar lotes existentes como opciones
+        lotes.forEach(lote => {
+            const option = document.createElement('option');
+            option.value = lote.lote;
+            option.textContent = `${lote.lote} (${lote.cantidad_total} kg)`;
+            option.setAttribute('data-existente', 'true');
+            loteSelect.appendChild(option);
+        });
+        
+        // Agregar opción para nuevo lote al final
+        const nuevaOpcion = document.createElement('option');
+        nuevaOpcion.value = 'nuevo';
+        nuevaOpcion.textContent = '+ Agregar nuevo lote';
+        loteSelect.appendChild(nuevaOpcion);
+        
+        // Mostrar mensaje informativo
+        if (!document.getElementById('info-lotes-existentes')) {
+            const infoDiv = document.createElement('div');
+            infoDiv.id = 'info-lotes-existentes';
+            infoDiv.className = 'form-text text-muted mt-2';
+            infoDiv.innerHTML = `<i class="bi bi-info-circle"></i> Se encontraron ${lotes.length} lote(s) existente(s) para este hilado.`;
+            loteSelect.parentNode.appendChild(infoDiv);
+        } else {
+            document.getElementById('info-lotes-existentes').innerHTML = `<i class="bi bi-info-circle"></i> Se encontraron ${lotes.length} lote(s) existente(s) para este hilado.`;
+        }
+    } else {
+        // Solo agregar opción de nuevo lote si no hay lotes existentes
+        const nuevaOpcion = document.createElement('option');
+        nuevaOpcion.value = 'nuevo';
+        nuevaOpcion.textContent = '+ Agregar nuevo lote';
+        loteSelect.appendChild(nuevaOpcion);
+        
+        // Remover mensaje informativo si existe
+        if (infoContainer) {
+            infoContainer.remove();
+        }
+    }
+}
+
+function manejarSeleccionLote() {
+    const loteSelect = document.getElementById('lote');
+    const nuevoLoteContainer = document.getElementById('nuevo-lote-container');
+    const nuevoLoteInput = document.getElementById('nuevo-lote');
+    
+    if (loteSelect.value === 'nuevo') {
+        // Mostrar campo para nuevo lote
+        nuevoLoteContainer.style.display = 'block';
+        nuevoLoteInput.required = true;
+        nuevoLoteInput.focus();
+        
+        // Limpiar valor del select para que no se envíe "nuevo"
+        loteSelect.removeAttribute('name');
+        nuevoLoteInput.setAttribute('name', 'lote');
+    } else {
+        // Ocultar campo para nuevo lote
+        nuevoLoteContainer.style.display = 'none';
+        nuevoLoteInput.required = false;
+        nuevoLoteInput.value = '';
+        
+        // Restaurar el name del select
+        loteSelect.setAttribute('name', 'lote');
+        nuevoLoteInput.removeAttribute('name');
+    }
+}
+
+async function procesarIngreso(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    
+    // Validar datos
+    if (!data.tipo_hilado || !data.titulo || !data.caracteristica || !data.color || !data.formato || !data.ubicacion || !data.proveedor || !data.lote) {
+        alert('Por favor complete todos los campos obligatorios');
+        return;
+    }
+    
+    // Preparar datos según formato
+    const total = parseFloat(document.getElementById('total-kg').textContent);
+    if (total <= 0) {
+        alert('La cantidad total debe ser mayor a 0');
+        return;
+    }
+    
+    const payload = {
+        tipo_hilado: data.tipo_hilado,
+        titulo: data.titulo,
+        caracteristica: data.caracteristica,
+        porcentaje: data.caracteristica, // Para Melange
+        color: data.color,
+        formato: data.formato,
+        ubicacion: data.ubicacion,
+        proveedor: data.proveedor,
+        lote: data.lote,
+        kg_por_caja: parseFloat(data.kg_por_caja) || 0,
+        cantidad: total
+    };
+    
+    if (data.formato === 'cajas') {
+        payload.cantidad_cajas = parseInt(data.cantidad_cajas) || 0;
+        payload.cantidad_pallets = 0;
+        payload.kg_total = payload.cantidad_cajas * payload.kg_por_caja;
+    } else {
+        payload.cantidad_pallets = parseInt(data.cantidad_pallets) || 0;
+        payload.cantidad_cajas = 0;
+        payload.kg_por_caja = parseFloat(data.kg_por_pallet) || 0;
+        payload.kg_total = payload.cantidad_pallets * payload.kg_por_caja;
+    }
+    
+    try {
+        const response = await fetch('/api/deposito/agregar-hilo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if (response.ok) {
+            // Mostrar modal para preguntar si quiere seguir cargando
+            const modal = new bootstrap.Modal(document.getElementById('continuarCargandoModal'));
+            modal.show();
+            cargarUltimosIngresos();
+            cargarEstadisticasDelDia();
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.error || 'Error desconocido'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error de conexión');
+    }
+}
+
+function limpiarFormulario() {
+    document.getElementById('parametros-container').style.display = 'none';
+    document.getElementById('proveedor-preview').style.display = 'none';
+    document.getElementById('titulo').disabled = true;
+    document.getElementById('caracteristica').disabled = true;
+    document.getElementById('total-kg').textContent = '0';
+    
+    // Limpiar sistema de lotes
+    const loteSelect = document.getElementById('lote');
+    const nuevoLoteContainer = document.getElementById('nuevo-lote-container');
+    const nuevoLoteInput = document.getElementById('nuevo-lote');
+    
+    loteSelect.innerHTML = `
+        <option value="">Seleccionar lote...</option>
+        <option value="nuevo">+ Agregar nuevo lote</option>
+    `;
+    loteSelect.setAttribute('name', 'lote');
+    nuevoLoteContainer.style.display = 'none';
+    nuevoLoteInput.required = false;
+    nuevoLoteInput.value = '';
+    nuevoLoteInput.removeAttribute('name');
+    
+    // Remover mensaje informativo si existe
+    const infoDiv = document.getElementById('info-lotes-existentes');
+    if (infoDiv) {
+        infoDiv.remove();
+    }
+}
+
+// Función para continuar cargando (resetear solo parámetros del material)
+function continuarCargando() {
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('continuarCargandoModal'));
+    modal.hide();
+    
+    // Mantener tipo, título, característica, color, proveedor y lote
+    // Solo resetear formato, ubicación y parámetros de cantidad
+    document.getElementById('formato').selectedIndex = 0;
+    document.getElementById('ubicacion').selectedIndex = 0;
+    
+    // Limpiar parámetros de cantidad
+    document.getElementById('cantidad_cajas').value = '';
+    document.getElementById('cantidad_pallets').value = '';
+    
+    // Ocultar contenedor de parámetros
+    document.getElementById('parametros-container').style.display = 'none';
+    document.getElementById('parametros-cajas').style.display = 'none';
+    document.getElementById('parametros-pallets').style.display = 'none';
+    
+    // Resetear total
+    document.getElementById('total-kg').textContent = '0';
+    
+    // Hacer foco en el campo formato
+    document.getElementById('formato').focus();
+}
+
+// Función para terminar carga (resetear todo)
+function terminarCarga() {
+    // Cerrar modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('continuarCargandoModal'));
+    modal.hide();
+    
+    // Resetear todo el formulario
+    document.getElementById('ingresoForm').reset();
+    limpiarFormulario();
+    
+    // Hacer foco en el primer campo
+    document.getElementById('tipo_hilado').focus();
+}
+
+async function cargarUltimosIngresos() {
+    try {
+        const response = await fetch('/api/movimientos?tipo=ingreso&limit=5');
+        const data = await response.json();
+        
+        const container = document.getElementById('ultimos-ingresos');
+        
+        if (data.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted">
+                    <i class="bi bi-inbox"></i>
+                    No hay ingresos registrados
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.map(item => `
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>${item.tipo_hilado}</strong><br>
+                    <small class="text-muted">${item.titulo} - ${item.color}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-success">${item.kg_total} kg</span><br>
+                    <small class="text-muted">${moment(item.fecha).format('DD/MM')}</small>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error al cargar últimos ingresos:', error);
+    }
+}
+
+async function cargarEstadisticasDelDia() {
+    try {
+        const hoy = moment().format('YYYY-MM-DD');
+        const response = await fetch(`/api/movimientos?tipo=ingreso&fecha=${hoy}`);
+        const data = await response.json();
+        
+        const ingresosHoy = data.length;
+        const kgHoy = data.reduce((sum, item) => sum + (item.kg_total || 0), 0);
+        
+        document.getElementById('ingresos-hoy').textContent = ingresosHoy;
+        document.getElementById('kg-hoy').textContent = kgHoy.toFixed(0);
+        
+    } catch (error) {
+        console.error('Error al cargar estadísticas del día:', error);
+    }
+}
+</script>
+{% endblock %}
